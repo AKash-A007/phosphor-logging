@@ -41,11 +41,9 @@ std::map<std::string, std::string> AelEntry::buildOemData(
 {
     std::map<std::string, std::string> oem;
 
-    // RFC Section 6: Set basic AEL metadata
     oem["AEL.VERSION"] = "1.0";
     oem["AEL.TYPE"] = "SIMPLE"; // Default to SIMPLE for now
 
-    // Check if it's CPER (COMPLEX)
     if (message.find("CperReported") != std::string::npos)
     {
         oem["AEL.TYPE"] = "COMPLEX";
