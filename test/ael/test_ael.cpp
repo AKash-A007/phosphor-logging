@@ -71,7 +71,7 @@ TEST_F(AfidLookupTest, EmptyStringReturnsAfidUnknown)
     EXPECT_STREQ(amd::ael::lookupAfid(""), "AFID_UNKNOWN");
 }
 
-─────────────────────────────────────────────────────────
+ // ─────────────────────────────────────────────────────────
 
 class AelEntryHelperTest : public ::testing::Test
 {
@@ -179,7 +179,7 @@ TEST_F(AelEntryHelperTest, OemAllKnownKeysMapped)
     EXPECT_EQ(oem.at("AEL.GPU_ID"),          "GPU1");
     EXPECT_EQ(oem.at("AEL.SEVERITY_OVERRIDE"), "Fatal");
 }
-─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 class DummyDataTest : public AelEntryHelperTest {};
 

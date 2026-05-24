@@ -69,7 +69,7 @@ std::map<std::string, std::string> AelEntry::buildOemData(
     return oem;
 }
 
-──────────────────────────────────────────────────────────────────────────
+ // ──────────────────────────────────────────────────────────────────────────
 
 AelEntry::AelEntry(sdbusplus::bus_t& bus, uint32_t id,
                    const std::string& message,
