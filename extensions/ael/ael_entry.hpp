@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 // extensions/ael/ael_entry.hpp
 //
 // AelEntry — one instance per log entry, owns the OEM D-Bus interface.

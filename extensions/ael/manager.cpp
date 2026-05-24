@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 #include "manager.hpp"
 
 #include <phosphor-logging/lg2.hpp>

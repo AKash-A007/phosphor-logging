@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 // extensions/ael/entry_points.cpp
 
 #include "extensions.hpp"

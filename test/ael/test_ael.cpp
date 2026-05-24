@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 // test/ael/test_ael.cpp
 //
 // Google Test suite for AEL extension.
