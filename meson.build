@@ -147,6 +147,14 @@ log_manager_ext_deps = []
 log_manager_ext_args = []
 
 subdir('extensions')
+
+# AEL (AMD Event Logging) extension
+if get_option('ael-extension').allowed()
+    subdir('extensions/ael')
+    log_manager_ext_sources += ael_sources
+    log_manager_ext_deps    += ael_deps
+    log_manager_ext_deps    += [declare_dependency(sources: [event_afid_map_hpp])]
+endif
 subdir('phosphor-rsyslog-config')
 
 # Generate daemon.

@@ -61,3 +61,10 @@ option(
     value: true,
     description: 'Enable support for redundant BMC systems',
 )
+ 
+option(
+    'ael-extension',
+    type: 'feature',
+    description: 'Enable AMD Event Logging (AEL) extension for phosphor-log-manager',
+    value: 'disabled',
+)

@@ -1,0 +1,84 @@
+version: 3.5.0
+# Real AMD AFID registry (AMD AFID Event List © AMD 2025)
+# IDs 15-34 from the official AMD Event Logging specification.
+afids:
+  - id: AFID_15
+    category: Off-Package Link Errors
+    type: WAFL
+    severity: Corrected
+  - id: AFID_16
+    category: Off-Package Link Errors
+    type: WAFL
+    severity: Fatal
+  - id: AFID_17
+    category: Off-Package Link Errors
+    type: XGMI
+    severity: Corrected
+  - id: AFID_18
+    category: Off-Package Link Errors
+    type: XGMI
+    severity: Fatal
+  - id: AFID_19
+    category: HBM Errors
+    type: Bad Page Retirement Threshold
+    severity: Fatal
+  - id: AFID_20
+    category: HBM Errors
+    type: On-die ECC
+    severity: Fatal
+  - id: AFID_21
+    category: HBM Errors
+    type: End-to-end CRC
+    severity: Fatal
+  - id: AFID_22
+    category: HBM Errors
+    type: On-die ECC
+    severity: Uncorrected, Non-fatal
+  - id: AFID_23
+    category: HBM Errors
+    type: End-to-end CRC
+    severity: Uncorrected, Non-fatal
+  - id: AFID_24
+    category: HBM Errors
+    type: All
+    severity: Corrected
+  - id: AFID_25
+    category: HBM Errors
+    type: All Others
+    severity: Fatal
+  - id: AFID_26
+    category: Device Internal Errors
+    type: Hardware Assertion (HWA)
+    severity: Fatal
+  - id: AFID_27
+    category: Device Internal Errors
+    type: Watchdog Timeout (WDT)
+    severity: Fatal
+  - id: AFID_28
+    category: Device Internal Errors
+    type: All Others
+    severity: Uncorrected, Non-fatal
+  - id: AFID_29
+    category: Device Internal Errors
+    type: All Others
+    severity: Corrected
+  - id: AFID_30
+    category: Device Internal Errors
+    type: All Others
+    severity: Fatal
+  - id: AFID_31
+    category: CPER Format
+    type: Malformed CPER
+    severity: ALL
+  - id: AFID_32
+    category: CPER Format
+    type: Incomplete ACA Data
+    severity: ALL
+  - id: AFID_33
+    category: CPER Format
+    type: Invalid ACA Data
+    severity: ALL
+  - id: AFID_34
+    category: Unidentified Errors
+    type: Unidentified Error
+    severity: ALL

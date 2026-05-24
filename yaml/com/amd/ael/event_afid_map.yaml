@@ -1,0 +1,44 @@
+version: 1.0
+# Maps OpenBMC event IDs to AMD AFIDs.
+# All AFIDs must exist in afid_registry.yaml.
+# This file is consumed by tools/ael_pipeline.py at build time.
+mappings:
+  # Fan events (Device Internal / HWA → AFID_26 for failure, AFID_29 for recovery)
+  - event: xyz.openbmc_project.State.Fan.FanFailed
+    afid: AFID_26
+  - event: xyz.openbmc_project.State.Fan.FanRestored
+    afid: AFID_29
+
+  # Thermal events (Device Internal / HWA → AFID_26)
+  - event: xyz.openbmc_project.State.Thermal.DeviceOverOperatingTemperatureFault
+    afid: AFID_26
+  - event: xyz.openbmc_project.State.Thermal.DeviceOperatingNormalTemperature
+    afid: AFID_29
+
+  # Sensor threshold — critical/hard-shutdown → AFID_25 (HBM Fatal)
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperCriticalThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperHardShutdownThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperSoftShutdownThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperWarningThreshold
+    afid: AFID_24
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerCriticalThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerHardShutdownThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerSoftShutdownThreshold
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerWarningThreshold
+    afid: AFID_24
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingCritical
+    afid: AFID_25
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingNoLongerCritical
+    afid: AFID_24
+  - event: xyz.openbmc_project.Sensor.Threshold.SensorReadingNormalRange
+    afid: AFID_24
+
+  # CPER — default AFID_34 (Unidentified) until decoded by amd-bmc-ras
+  - event: com.amd.Event.Cper.CperReported
+    afid: AFID_34
