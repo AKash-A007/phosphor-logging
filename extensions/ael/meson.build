@@ -2,7 +2,6 @@
 
 python3_prog = find_program('python3')
 
-# ── Step 1: Generate event_afid_map.hpp at build time ────────────────────────
 
 event_afid_map_hpp = custom_target(
     'ael_afid_codegen',
@@ -21,7 +20,6 @@ event_afid_map_hpp = custom_target(
     build_by_default: true,
 )
 
-# ── Step 2: AEL sources ───────────────────────────────────────────────────────
 # entry_points.cpp  — startup + REGISTER_EXTENSION_FUNCTION (high-level entry)
 # manager.cpp       — Manager class (owns all state)
 # ael_entry.cpp     — per-entry OEM object (owns D-Bus interface)
@@ -32,7 +30,6 @@ ael_sources = files(
     'ael_entry.cpp',
 )
 
-# ── Step 3: Dependencies ──────────────────────────────────────────────────────
 
 ael_deps = [
     sdbusplus_dep,
@@ -44,11 +41,8 @@ ael_include_dirs = include_directories(
     '.',
 )
 
-# ── Step 5: Tests ─────────────────────────────────────────────────────────────
 
-# Note: Tests are handled by test/meson.build which calls subdir('ael')
 
-# ── Step 6: Expose to root meson.build ────────────────────────────────────────
 #
 # In phosphor-logging/meson.build:
 #

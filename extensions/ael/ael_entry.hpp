@@ -1,10 +1,4 @@
 // extensions/ael/ael_entry.hpp
-//
-// AelEntry — one instance per log entry, owns the OEM D-Bus interface.
-//
-// Mirrors PEL object in openpower-pels/pel.hpp:
-//   PEL   → holds the binary PEL data + D-Bus representation
-//   AelEntry → holds ServiceCode + OemAdditionalData + D-Bus interface
 
 #pragma once
 
@@ -30,16 +24,10 @@ using OemEntryIface = sdbusplus::server::object_t<
 
 /**
  * @class AelEntry
- *
- * Represents the AMD OEM metadata for a single log entry.
- * Owns the xyz.openbmc_project.Logging.Entry.Oem D-Bus interface
- * attached to /xyz/openbmc_project/logging/entry/<id>.
- *
  * Lifecycle:
  *   Created in Manager::create()  → attaches OEM interface to D-Bus
  *   Destroyed in Manager::erase() → removes OEM interface from D-Bus
  *
- * Mirrors: openpower::pels::PEL
  */
 class AelEntry
 {
@@ -56,10 +44,12 @@ class AelEntry
      * @param[in] additionalData - KEY=VALUE metadata from lg2::commit()
      * @param[in] bus            - sdbusplus bus
      */
-    AelEntry(uint32_t id,
+    AelEntry(sdbusplus::bus_t& bus,
+             uint32_t id,
              const std::string& message,
+             phosphor::logging::Entry::Level severity,
              const phosphor::logging::AdditionalDataArg& additionalData,
-             sdbusplus::bus_t& bus);
+             const std::string& serviceCode);
 
     ~AelEntry() = default;
 
@@ -72,7 +62,6 @@ class AelEntry
         return _oemData;
     }
 
-  private:
     /**
      * @brief Extract a value from AdditionalData by key.
      * AdditionalData items are "KEY=VALUE" strings.
@@ -88,6 +77,8 @@ class AelEntry
     static std::map<std::string, std::string> buildOemData(
         const std::string& message,
         const phosphor::logging::AdditionalDataArg& additionalData);
+
+  private:
 
     /** Log entry ID */
     uint32_t _id;

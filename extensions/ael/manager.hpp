@@ -5,28 +5,18 @@
 
 #include <sdbusplus/bus.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <vector>
 
 namespace amd::ael
 {
 
-/**
- * @class Manager
- *
- * The central AEL manager object. Created once at daemon startup and
- * kept alive for the lifetime of phosphor-log-manager.
- *
- * Responsibilities:
- *  - Own the sdbusplus bus reference
- *  - Own the phosphor-log-manager internal::Manager reference
- *  - Own all per-entry AelEntry objects (keyed by log entry ID)
- *  - Delegate create() and erase() to per-entry logic
- *
- * Mirrors: openpower::pels::Manager
- */
 class Manager
 {
   public:
@@ -75,11 +65,50 @@ class Manager
     void erase(uint32_t id);
 
   private:
+    /**
+     * @brief Load the AEL configuration from JSON.
+     */
+    void loadConfig();
+
+    /**
+     * @brief Resolve the origin of condition for a log entry.
+     */
+    std::string resolveOrigin(
+        uint32_t id,
+        const phosphor::logging::AdditionalDataArg& additionalData);
+
+    /**
+     * @brief Resolve a FRU hint into an inventory path using the FRUMap.
+     */
+    std::string resolveFruHint(const std::string& hint);
+
+    /**
+     * @brief Expand associations based on AFID and origin path.
+     */
+    std::vector<std::tuple<std::string, std::string, std::string>>
+        expandAssociations(const std::string& afid, const std::string& origin);
+
+    /**
+     * @brief Check if a match rule pattern matches a property value.
+     */
+    bool checkMatch(const nlohmann::json& matchBlock,
+                    const std::string& propertyValue);
+
+    /**
+     * @brief Resolve a property value (e.g., SensorName) from additionalData.
+     */
+    std::string resolveProperty(
+        const std::string& propertyName,
+        const phosphor::logging::AdditionalDataArg& additionalData);
+
     /** sdbusplus bus reference — not owned, lives in phosphor-log-manager */
     sdbusplus::bus_t& _bus;
 
     /** phosphor-log-manager Manager reference */
     phosphor::logging::internal::Manager& _logMgr;
+
+    /** AEL configuration loaded from JSON */
+    nlohmann::json _config;
 
     /**
      * Per-entry AEL objects.

@@ -1,0 +1,55 @@
+{
+  "Version": "1.0",
+  "BMCEventMatchRules": [
+    {
+      "Event": "xyz.openbmc_project.State.Fan.FanFailed",
+      "AFID": "10026",
+      "Priority": 10,
+      "Severity": "Critical"
+    },
+    {
+      "Event": "xyz.openbmc_project.State.Fan.FanRestored",
+      "AFID": "10029",
+      "Priority": 10,
+      "Severity": "Informational"
+    },
+    {
+      "Event": "com.amd.Event.Cper.CperReported",
+      "AFID": "10034",
+      "Priority": 10
+    },
+    {
+      "Event": "xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperCriticalThreshold",
+      "Match": {
+        "SensorName": { "Pattern": ".*_TEMP", "Optional": true },
+        "Unit": { "Equals": "C", "Optional": true }
+      },
+      "AFID": "10026",
+      "Priority": 10,
+      "Severity": "Critical"
+    }
+  ],
+  "AFIDRules": [
+    {
+      "AFID": "10026",
+      "Expand": ["self", "powered_by", "cooled_by"],
+      "MaxDepth": 1
+    }
+  ],
+  "FRUMap": {
+    "Exact": {
+      "CPU0": "/xyz/openbmc_project/inventory/system/chassis/cpu0",
+      "GPU0": "/xyz/openbmc_project/inventory/system/chassis/gpu0"
+    },
+    "Pattern": [
+      {
+        "Match": "CPU([0-9]+)",
+        "Template": "/xyz/openbmc_project/inventory/system/chassis/cpu{0}"
+      },
+      {
+        "Match": "GPU([0-9]+)",
+        "Template": "/xyz/openbmc_project/inventory/system/chassis/gpu{0}"
+      }
+    ]
+  }
+}

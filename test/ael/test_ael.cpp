@@ -2,7 +2,6 @@
 //
 // Google Test suite for AEL extension.
 // Tests the Manager, AelEntry, and entry point logic
-// using dummy data simple use cases as requested by mentor.
 
 #include "extensions/ael/ael_entry.hpp"
 #include "extensions/ael/manager.hpp"
@@ -20,10 +19,6 @@ using ::testing::IsEmpty;
 using ::testing::Not;
 
 using AddData = std::vector<std::string>;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Test Suite 1: AFID Lookup (generated header)
-// ─────────────────────────────────────────────────────────────────────────────
 
 class AfidLookupTest : public ::testing::Test {};
 
@@ -76,15 +71,11 @@ TEST_F(AfidLookupTest, EmptyStringReturnsAfidUnknown)
     EXPECT_STREQ(amd::ael::lookupAfid(""), "AFID_UNKNOWN");
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Test Suite 2: AelEntry static helpers (tested via a test subclass)
-// ─────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────
 
-// We expose the helpers by making a thin test accessor class
 class AelEntryHelperTest : public ::testing::Test
 {
   protected:
-    // Mirror extractValue logic inline for testability
     std::string extract(const AddData& data, const std::string& key)
     {
         const std::string prefix = key + "=";
@@ -98,20 +89,30 @@ class AelEntryHelperTest : public ::testing::Test
         const std::string& msg, const AddData& data)
     {
         static const std::vector<std::pair<std::string,std::string>> keys = {
-            {"SLOT_ID",           "SlotId"},
-            {"EVENT_TYPE",        "EventType"},
-            {"CORRELATION_ID",    "CorrelationId"},
-            {"COMPONENT_ID",      "ComponentId"},
-            {"CPER_SECTION_TYPE", "CperSectionType"},
-            {"GPU_ID",            "GpuId"},
-            {"SEVERITY_HINT",     "SeverityHint"},
+            {"SLOT_ID",           "AEL.SLOT_ID"},
+            {"EVENT_TYPE",        "AEL.EVENT_TYPE"},
+            {"CORRELATION_ID",    "AEL.CORRELATION_ID"},
+            {"COMPONENT_ID",      "AEL.COMPONENT_ID"},
+            {"CPER_SECTION_TYPE", "AEL.SUBTYPE"},
+            {"GPU_ID",            "AEL.GPU_ID"},
+            {"SEVERITY_HINT",     "AEL.SEVERITY_OVERRIDE"},
         };
         std::map<std::string, std::string> oem;
-        oem["EventMessage"] = msg;
-        for (const auto& [raw, camel] : keys)
+        oem["AEL.VERSION"] = "1.0";
+        oem["AEL.TYPE"] = "SIMPLE";
+
+        if (msg.find("CperReported") != std::string::npos)
+        {
+            oem["AEL.TYPE"] = "COMPLEX";
+            oem["AEL.SUBTYPE"] = "CPER";
+            auto path = extract(data, "Path");
+            if (!path.empty()) oem["AEL.DATA.URI"] = "file://" + path;
+        }
+
+        for (const auto& [raw, oemKey] : keys)
         {
             auto v = extract(data, raw);
-            if (!v.empty()) oem[camel] = v;
+            if (!v.empty()) oem[oemKey] = v;
         }
         return oem;
     }
@@ -141,18 +142,12 @@ TEST_F(AelEntryHelperTest, PartialKeyNotMatched)
     EXPECT_TRUE(extract(d, "SLOT_ID").empty());
 }
 
-TEST_F(AelEntryHelperTest, OemAlwaysHasEventMessage)
-{
-    auto oem = buildOem("xyz.openbmc_project.State.Fan.FanFailed", {});
-    EXPECT_EQ(oem.count("EventMessage"), 1);
-    EXPECT_EQ(oem.at("EventMessage"), "xyz.openbmc_project.State.Fan.FanFailed");
-}
 
 TEST_F(AelEntryHelperTest, OemRawKeysNotPresent)
 {
     AddData d = {"SLOT_ID=GPU0"};
     auto oem = buildOem("some.event", d);
-    EXPECT_EQ(oem.count("SlotId"), 1);
+    EXPECT_EQ(oem.count("AEL.SLOT_ID"), 1);
     EXPECT_EQ(oem.count("SLOT_ID"), 0);
 }
 
@@ -161,7 +156,7 @@ TEST_F(AelEntryHelperTest, OemUnknownKeysIgnored)
     AddData d = {"SLOT_ID=GPU0", "UNKNOWN_KEY=ignored"};
     auto oem = buildOem("some.event", d);
     EXPECT_EQ(oem.count("UNKNOWN_KEY"), 0);
-    EXPECT_EQ(oem.count("SlotId"), 1);
+    EXPECT_EQ(oem.count("AEL.SLOT_ID"), 1);
 }
 
 TEST_F(AelEntryHelperTest, OemAllKnownKeysMapped)
@@ -176,47 +171,38 @@ TEST_F(AelEntryHelperTest, OemAllKnownKeysMapped)
         "SEVERITY_HINT=Fatal",
     };
     auto oem = buildOem("com.amd.Event.Cper.CperReported", d);
-    EXPECT_EQ(oem.at("SlotId"),          "GPU1");
-    EXPECT_EQ(oem.at("EventType"),       "CPER");
-    EXPECT_EQ(oem.at("CorrelationId"),   "abc");
-    EXPECT_EQ(oem.at("ComponentId"),     "HBM0");
-    EXPECT_EQ(oem.at("CperSectionType"), "Memory");
-    EXPECT_EQ(oem.at("GpuId"),          "GPU1");
-    EXPECT_EQ(oem.at("SeverityHint"),   "Fatal");
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"),          "GPU1");
+    EXPECT_EQ(oem.at("AEL.EVENT_TYPE"),       "CPER");
+    EXPECT_EQ(oem.at("AEL.CORRELATION_ID"),   "abc");
+    EXPECT_EQ(oem.at("AEL.COMPONENT_ID"),     "HBM0");
+    EXPECT_EQ(oem.at("AEL.SUBTYPE"),          "Memory");
+    EXPECT_EQ(oem.at("AEL.GPU_ID"),          "GPU1");
+    EXPECT_EQ(oem.at("AEL.SEVERITY_OVERRIDE"), "Fatal");
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Test Suite 3: Dummy Data Simple Use Cases
-// Complete end-to-end flows with known dummy data — what mentor asked for
-// ─────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────
 
 class DummyDataTest : public AelEntryHelperTest {};
 
 TEST_F(DummyDataTest, FanFailureOnGpu0)
 {
-    // Dummy use case: fan failure fires on GPU0
     const std::string event = "xyz.openbmc_project.State.Fan.FanFailed";
     AddData data = {"SLOT_ID=GPU0", "EVENT_TYPE=STANDARD"};
 
-    // AFID lookup — what Manager would set as ServiceCode
     const char* sc = amd::ael::lookupAfid(event);
     EXPECT_STREQ(sc, "AFID_26");  // Device Internal / HWA / Fatal
 
-    // OEM data — what AelEntry would populate
     auto oem = buildOem(event, data);
-    EXPECT_EQ(oem.at("EventMessage"), event);
-    EXPECT_EQ(oem.at("SlotId"),       "GPU0");
-    EXPECT_EQ(oem.at("EventType"),    "STANDARD");
-    EXPECT_EQ(oem.size(), 3u);
+    EXPECT_EQ(oem.at("AEL.TYPE"),     "SIMPLE");
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"),  "GPU0");
+    EXPECT_EQ(oem.at("AEL.EVENT_TYPE"), "STANDARD");
+    EXPECT_EQ(oem.size(), 4u); // VERSION, TYPE, SLOT_ID, EVENT_TYPE
 
-    // Sanity: ServiceCode is never empty or AFID_UNKNOWN for this event
     EXPECT_STRNE(sc, "AFID_UNKNOWN");
     EXPECT_STRNE(sc, "");
 }
 
 TEST_F(DummyDataTest, CperErrorOnGpu1WithFullMetadata)
 {
-    // Dummy use case: CPER event from amd-bmc-ras for HBM error on GPU1
     const std::string event = "com.amd.Event.Cper.CperReported";
     AddData data = {
         "SLOT_ID=GPU1",
@@ -231,14 +217,14 @@ TEST_F(DummyDataTest, CperErrorOnGpu1WithFullMetadata)
     EXPECT_STREQ(sc, "AFID_34");  // default Unidentified until decoded
 
     auto oem = buildOem(event, data);
-    EXPECT_EQ(oem.at("SlotId"),          "GPU1");
-    EXPECT_EQ(oem.at("EventType"),       "CPER");
-    EXPECT_EQ(oem.at("CorrelationId"),   "cper-abc-123");
-    EXPECT_EQ(oem.at("CperSectionType"), "Memory");
-    EXPECT_EQ(oem.at("GpuId"),          "GPU1");
-    EXPECT_EQ(oem.at("SeverityHint"),   "Fatal");
-    EXPECT_EQ(oem.at("EventMessage"),    event);
-    EXPECT_EQ(oem.size(), 7u);
+    EXPECT_EQ(oem.at("AEL.TYPE"),        "COMPLEX");
+    EXPECT_EQ(oem.at("AEL.SUBTYPE"),     "Memory"); // Overwritten by mapped keys
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"),     "GPU1");
+    EXPECT_EQ(oem.at("AEL.EVENT_TYPE"),  "CPER");
+    EXPECT_EQ(oem.at("AEL.CORRELATION_ID"), "cper-abc-123");
+    EXPECT_EQ(oem.at("AEL.GPU_ID"),      "GPU1");
+    EXPECT_EQ(oem.at("AEL.SEVERITY_OVERRIDE"), "Fatal");
+    EXPECT_EQ(oem.size(), 8u); // VERSION, TYPE, SUBTYPE, SLOT, EVENT, CORR, GPU, SEV
 }
 
 TEST_F(DummyDataTest, ThermalOverTempOnCpu0)
@@ -251,13 +237,12 @@ TEST_F(DummyDataTest, ThermalOverTempOnCpu0)
     EXPECT_STREQ(sc, "AFID_26");
 
     auto oem = buildOem(event, data);
-    EXPECT_EQ(oem.at("SlotId"),      "CPU0");
-    EXPECT_EQ(oem.at("ComponentId"), "ThermalSensor0");
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"),      "CPU0");
+    EXPECT_EQ(oem.at("AEL.COMPONENT_ID"), "ThermalSensor0");
 }
 
 TEST_F(DummyDataTest, UnmappedEventGracefulFallback)
 {
-    // New event not yet in the AFID map — must not crash, must return AFID_UNKNOWN
     const char* sc = amd::ael::lookupAfid(
         "xyz.openbmc_project.Some.NewEvent.NotYetMapped");
     EXPECT_STREQ(sc, "AFID_UNKNOWN");
@@ -266,7 +251,7 @@ TEST_F(DummyDataTest, UnmappedEventGracefulFallback)
     AddData data = {"SLOT_ID=GPU2"};
     auto oem = buildOem(
         "xyz.openbmc_project.Some.NewEvent.NotYetMapped", data);
-    EXPECT_EQ(oem.at("SlotId"), "GPU2");
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"), "GPU2");
 }
 
 TEST_F(DummyDataTest, SensorCriticalReading)
@@ -279,13 +264,9 @@ TEST_F(DummyDataTest, SensorCriticalReading)
     EXPECT_STREQ(sc, "AFID_25");  // HBM All Others Fatal
 
     auto oem = buildOem(event, data);
-    EXPECT_EQ(oem.at("SlotId"),      "SENSOR_BOARD");
-    EXPECT_EQ(oem.at("ComponentId"), "TempSensor0");
+    EXPECT_EQ(oem.at("AEL.SLOT_ID"),      "SENSOR_BOARD");
+    EXPECT_EQ(oem.at("AEL.COMPONENT_ID"), "TempSensor0");
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// main
-// ─────────────────────────────────────────────────────────────────────────────
 
 int main(int argc, char** argv)
 {

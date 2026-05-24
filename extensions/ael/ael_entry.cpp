@@ -11,23 +11,17 @@
 namespace amd::ael
 {
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Known AdditionalData key → OemAdditionalData camelCase key mapping
-// ─────────────────────────────────────────────────────────────────────────────
 
 static const std::vector<std::pair<std::string, std::string>> knownKeyMap = {
-    {"SLOT_ID",           "SlotId"},
-    {"EVENT_TYPE",        "EventType"},
-    {"CORRELATION_ID",    "CorrelationId"},
-    {"COMPONENT_ID",      "ComponentId"},
-    {"CPER_SECTION_TYPE", "CperSectionType"},
-    {"GPU_ID",            "GpuId"},
-    {"SEVERITY_HINT",     "SeverityHint"},
+    {"SLOT_ID",           "AEL.SLOT_ID"},
+    {"EVENT_TYPE",        "AEL.EVENT_TYPE"},
+    {"CORRELATION_ID",    "AEL.CORRELATION_ID"},
+    {"COMPONENT_ID",      "AEL.COMPONENT_ID"},
+    {"CPER_SECTION_TYPE", "AEL.SUBTYPE"},
+    {"GPU_ID",            "AEL.GPU_ID"},
+    {"SEVERITY_HINT",     "AEL.SEVERITY_OVERRIDE"},
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Static helpers
-// ─────────────────────────────────────────────────────────────────────────────
 
 std::string AelEntry::extractValue(
     const phosphor::logging::AdditionalDataArg& additionalData,
@@ -46,8 +40,25 @@ std::map<std::string, std::string> AelEntry::buildOemData(
     const phosphor::logging::AdditionalDataArg& additionalData)
 {
     std::map<std::string, std::string> oem;
-    oem["EventMessage"] = message;
 
+    // RFC Section 6: Set basic AEL metadata
+    oem["AEL.VERSION"] = "1.0";
+    oem["AEL.TYPE"] = "SIMPLE"; // Default to SIMPLE for now
+
+    // Check if it's CPER (COMPLEX)
+    if (message.find("CperReported") != std::string::npos)
+    {
+        oem["AEL.TYPE"] = "COMPLEX";
+        oem["AEL.SUBTYPE"] = "CPER";
+        
+        auto path = extractValue(additionalData, "Path");
+        if (!path.empty())
+        {
+            oem["AEL.DATA.URI"] = "file://" + path;
+        }
+    }
+
+    // Add mapped keys
     for (const auto& [rawKey, oemKey] : knownKeyMap)
     {
         auto val = extractValue(additionalData, rawKey);
@@ -60,25 +71,18 @@ std::map<std::string, std::string> AelEntry::buildOemData(
     return oem;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Constructor — this is where the OEM interface gets attached to D-Bus
-// ─────────────────────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────────────────────────
 
-AelEntry::AelEntry(uint32_t id,
+AelEntry::AelEntry(sdbusplus::bus_t& bus, uint32_t id,
                    const std::string& message,
+                   [[maybe_unused]] phosphor::logging::Entry::Level severity,
                    const phosphor::logging::AdditionalDataArg& additionalData,
-                   sdbusplus::bus_t& bus) :
+                   const std::string& serviceCode) :
     _id(id),
-    _serviceCode(amd::ael::lookupAfid(message)),
+    _serviceCode(serviceCode),
     _oemData(buildOemData(message, additionalData))
 {
-    // Attach xyz.openbmc_project.Logging.Entry.Oem to the existing log entry
-    // object path. Same path as the standard Entry — no duplication.
-    //
-    //   /xyz/openbmc_project/logging/entry/<id>
-    //     ├── xyz.openbmc_project.Logging.Entry       (phosphor-logging)
-    //     └── xyz.openbmc_project.Logging.Entry.Oem  (AEL — attached here)
-
+   
     const auto path =
         std::format("/xyz/openbmc_project/logging/entry/{}", id);
 
