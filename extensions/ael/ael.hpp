@@ -15,6 +15,7 @@
 #pragma once
 
 #include "log_manager.hpp"
+#include "extensions.hpp"
 
 #include <phosphor-logging/lg2.hpp>
 
@@ -32,13 +33,11 @@ namespace amd::ael
  * and populates ServiceCode + OemAdditionalData inline.
  * No async calls. No D-Bus signal listening.
  */
-void create(const std::string& message,
+void create(const std::string& message, uint32_t id, uint64_t timestamp,
             phosphor::logging::Entry::Level severity,
-            const phosphor::logging::AssociationList& associations,
             const phosphor::logging::AdditionalDataArg& additionalData,
-            const phosphor::logging::FFDCArg& ffdc,
-            uint32_t id,
-            phosphor::logging::internal::Manager& manager);
+            const phosphor::logging::AssociationEndpointsArg& associations,
+            const phosphor::logging::FFDCArg& ffdc);
 
 /**
  * @brief Called before a log entry is deleted.

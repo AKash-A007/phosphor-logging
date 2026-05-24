@@ -1,6 +1,7 @@
 # test/ael/meson.build
 
-gtest_dep = dependency('gtest', main: true)
+# test/ael/meson.build
+# gtest_dep is inherited from parent test/meson.build (googletest subproject)
 
 test(
     'test-ael',
@@ -8,16 +9,20 @@ test(
         'test-ael',
         'test_ael.cpp',
         dependencies: [
+            conf_h_dep,
             gtest_dep,
             sdbusplus_dep,
+            sdeventplus_dep,
+            pdi_dep,
             phosphor_logging_dep,
-            event_afid_map_hpp,     # generated header as dep
+            declare_dependency(sources: [event_afid_map_hpp]),
         ],
         include_directories: [
             include_directories('../..'),
+            include_directories('../../gen'),
             ael_include_dirs,
         ],
-        link_with: [],
+        link_with: [log_manager_lib],
     ),
     timeout: 60,
 )

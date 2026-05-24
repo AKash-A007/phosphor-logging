@@ -24,9 +24,10 @@ event_afid_map_hpp = custom_target(
     command: [
         python3_prog,
         ael_pipeline,
-        '--pdi-dir',  meson.source_root() / 'subprojects/phosphor-dbus-interfaces/yaml/xyz/openbmc_project',
-        '--afid-map', meson.source_root() / 'yaml/com/amd/ael/event_afid_map.yaml',
-        '--registry', meson.source_root() / 'yaml/com/amd/ael/afid_registry.yaml',
+        '--pdi-dir',  meson.project_source_root() / 'subprojects/phosphor-dbus-interfaces/yaml/xyz/openbmc_project',
+        '--amd-dir',  meson.project_source_root() / 'yaml/com/amd',
+        '--afid-map', meson.project_source_root() / 'yaml/com/amd/ael/event_afid_map.yaml',
+        '--registry', meson.project_source_root() / 'yaml/com/amd/ael/afid_registry.yaml',
         '--out',      meson.current_build_dir() / 'ael_build_report.csv',
         '--header',   '@OUTPUT@',
         '--no-color',
@@ -50,10 +51,7 @@ ael_deps = [
 # ── Step 4: Include dirs ──────────────────────────────────────────────────────
 # Add build dir so ael.cpp can #include "event_afid_map.hpp"
 
-ael_include_dirs = include_directories(
-    '.',
-    meson.current_build_dir(),
-)
+ael_include_dirs = include_directories('.')
 
 # ── Step 5: Expose to parent meson.build ──────────────────────────────────────
 #
@@ -67,8 +65,4 @@ ael_include_dirs = include_directories(
 #       phosphor_log_manager_includes += ael_include_dirs
 #   endif
 
-# ── Step 6: Tests ─────────────────────────────────────────────────────────────
-
-if get_option('tests').allowed()
-    subdir('../../test/ael')
-endif
+# ── Step 6: Tests are in test/ael/meson.build, wired from test/meson.build ───

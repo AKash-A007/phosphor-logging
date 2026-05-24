@@ -97,29 +97,12 @@ class EventInfo:
 # Pass 1 — PDI Discovery
 # ─────────────────────────────────────────────────────────────────────────────
 
-def derive_namespace(yaml_file: Path, pdi_path: Path) -> str:
-    parts = pdi_path.parts
-    prefix_parts = []
-    for part in parts:
-        if part in ("xyz", "org"):
-            prefix_parts = list(parts[parts.index(part):])
-            break
-    dir_prefix = ".".join(prefix_parts) if prefix_parts else ""
-    rel = yaml_file.relative_to(pdi_path)
-    rel_parts = list(rel.parts)
-    stem = rel_parts[-1].replace(".events.yaml", "")
-    ns_parts = rel_parts[:-1] + [stem]
-    if dir_prefix:
-        return dir_prefix + "." + ".".join(ns_parts)
-    return ".".join(ns_parts)
-
-
-def pass1_discover(pdi_dir: str) -> dict[str, EventInfo]:
+def pass1_discover(pdi_dir: str, amd_dir: str = "") -> dict[str, EventInfo]:
     """
-    Pass 1: Walk PDI tree, extract all events with their params.
+    Pass 1: Walk PDI tree (and optional AMD-local tree), extract all events.
     Returns: { event_id -> EventInfo }
     """
-    section("Pass 1 — PDI Event Discovery")
+    section("Pass 1 \u2014 PDI Event Discovery")
 
     pdi_path = Path(pdi_dir).resolve()
     if not pdi_path.exists():
@@ -135,56 +118,95 @@ def pass1_discover(pdi_dir: str) -> dict[str, EventInfo]:
 
     events: dict[str, EventInfo] = {}
 
-    for yf in yaml_files:
-        try:
-            data = yaml.safe_load(open(yf))
-        except Exception as e:
-            warn(f"Could not read {yf.name}: {e}")
-            continue
+    def _scan_dir(base_path: Path, namespace_root: str):
+        """Scan a directory tree of *.events.yaml files."""
+        for yf in sorted(base_path.rglob("*.events.yaml")):
+            try:
+                data = yaml.safe_load(open(yf))
+            except Exception as e:
+                warn(f"Could not read {yf.name}: {e}")
+                continue
 
-        if not isinstance(data, dict):
-            continue
+            if not isinstance(data, dict):
+                continue
 
-        namespace = derive_namespace(yf, pdi_path)
+            # Build namespace from relative path
+            rel = yf.relative_to(base_path)
+            rel_parts = list(rel.parts)
+            stem = rel_parts[-1].replace(".events.yaml", "")
+            ns_parts = rel_parts[:-1] + [stem]
+            namespace = namespace_root + "." + ".".join(ns_parts)
 
-        for kind in ("errors", "events"):
-            for entry in data.get(kind, []) or []:
-                if not isinstance(entry, dict) or "name" not in entry:
-                    continue
+            # Determine format
+            has_list_format = any(
+                isinstance(data.get(k), list) and data.get(k) and
+                isinstance(data[k][0], dict) and "name" in data[k][0]
+                for k in ("events", "errors")
+                if data.get(k)
+            )
 
-                event_id = f"{namespace}.{entry['name']}"
+            entries_to_process = []  # list of (event_id, metadata_list)
+
+            if has_list_format:
+                for kind in ("errors", "events"):
+                    for entry in data.get(kind, []) or []:
+                        if not isinstance(entry, dict) or "name" not in entry:
+                            continue
+                        event_id = f"{namespace}.{entry['name']}"
+                        entries_to_process.append(
+                            (event_id, entry.get("metadata", []) or []))
+            elif "metadata" in data:
+                # AMD single-event top-level format (one file = one event).
+                # Convention: Cper.events.yaml -> event name CperReported
+                event_name = stem + "Reported" if not stem.endswith(
+                    ("Reported", "Failed", "Restored", "Fault", "Changed")) \
+                    else stem
+                event_id = f"{namespace}.{event_name}"
+                entries_to_process.append((event_id, data.get("metadata", []) or []))
+
+            for event_id, meta_list in entries_to_process:
                 params = []
-
-                for p in entry.get("metadata", []) or []:
+                for p in meta_list:
                     if not isinstance(p, dict):
                         continue
                     primary_raw = p.get("primary", False)
                     primary = primary_raw if isinstance(primary_raw, bool) \
                               else str(primary_raw).lower() == "true"
                     params.append(ParamInfo(
-                        name    = p.get("name", ""),
-                        type    = p.get("type", ""),
-                        primary = primary,
+                        name=p.get("name", ""),
+                        type=p.get("type", ""),
+                        primary=primary,
                     ))
 
                 ev = EventInfo(
-                    event_id        = event_id,
-                    kind            = kind.rstrip("s"),
-                    severity        = entry.get("severity", ""),
-                    redfish_mapping = entry.get("redfish-mapping", ""),
-                    params          = params,
+                    event_id=event_id,
+                    kind="event",
+                    severity=data.get("severity", ""),
+                    redfish_mapping=data.get("redfish-mapping", ""),
+                    params=params,
                 )
                 events[event_id] = ev
 
-                # Per-event summary
                 obj_paths = [p.name for p in ev.object_path_params]
                 primaries = [p.name for p in ev.primary_params]
                 info(f"{event_id}")
-                info(f"  object_path params : {obj_paths if obj_paths else '—'}")
-                info(f"  primary params     : {primaries if primaries else '—'}")
+                info(f"  object_path params : {obj_paths if obj_paths else '\u2014'}")
+                info(f"  primary params     : {primaries if primaries else '\u2014'}")
+
+    # Scan PDI (xyz.openbmc_project.*)
+    _scan_dir(pdi_path, "xyz.openbmc_project")
+
+    # Optionally scan AMD-local events (com.amd.*)
+    if amd_dir:
+        amd_path = Path(amd_dir).resolve()
+        if amd_path.exists():
+            info(f"Scanning AMD-local events under: {amd_dir}")
+            _scan_dir(amd_path, "com.amd")
+        else:
+            warn(f"AMD event dir not found (skipping): {amd_dir}")
 
     print()
-    ok(f"Discovered {len(events)} event(s) from PDI")
+    ok(f"Discovered {len(events)} event(s) from PDI + AMD")
     return events
 
 
@@ -546,6 +568,10 @@ def main():
     )
     parser.add_argument("--pdi-dir",
         default="./phosphor-dbus-interfaces/yaml/xyz/openbmc_project")
+    parser.add_argument("--amd-dir",
+        default="",
+        help="Optional AMD-local event YAML dir (e.g. yaml/com/amd/Event). "
+             "Events here are discovered under the com.amd namespace.")
     parser.add_argument("--afid-map",
         default="./yaml/com/amd/ael/event_afid_map.yaml")
     parser.add_argument("--registry",
@@ -568,7 +594,7 @@ def main():
     print()
 
     # ── Pass 1 ──────────────────────────────────────────────────────────────
-    events = pass1_discover(args.pdi_dir)
+    events = pass1_discover(args.pdi_dir, getattr(args, 'amd_dir', ''))
 
     # ── Pass 2 ──────────────────────────────────────────────────────────────
     afid_map, registry = pass2_associate(events, args.afid_map, args.registry)
