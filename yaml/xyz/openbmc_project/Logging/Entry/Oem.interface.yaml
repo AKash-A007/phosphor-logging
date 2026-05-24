@@ -1,0 +1,19 @@
+description: >
+    OEM extension interface for phosphor-logging log entries.
+    Attached by AEL extension to provide AMD-specific metadata.
+
+properties:
+    - name: ServiceCode
+      type: string
+      description: >
+          AMD Field ID (AFID) representing the error classification.
+          Format: "AFID_XX" where XX is 15-34.
+      errors:
+          - xyz.openbmc_project.Common.Error.InvalidArgument
+
+    - name: OemAdditionalData
+      type: dict[string,string]
+      description: >
+          OEM-specific key-value metadata.
+          Standard keys: SlotId, EventType, CorrelationId, ComponentId,
+          CperSectionType, GpuId, SeverityHint, EventMessage.

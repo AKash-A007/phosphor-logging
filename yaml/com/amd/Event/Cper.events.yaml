@@ -1,0 +1,24 @@
+description: >
+    CPER (Common Platform Error Record) event reported by AMD platform.
+    Contains binary CPER payload for detailed error analysis.
+
+    - ObjectPath: D-Bus path of the component that experienced the error
+    - Message: Human-readable description of the CPER event
+    - Data: File descriptor pointing to CPER binary payload
+    - Severity: Recoverable | Fatal | Corrected | Informational
+
+    This event maps to AFID_34 (Unidentified) by default.
+    Real AFID is resolved after CPER decoding by amd-bmc-ras.
+
+metadata:
+    - name: ObjectPath
+      type: string
+      primary: true
+    - name: Message
+      type: string
+      primary: true
+    - name: Data
+      type: unixfd
+      primary: true
+    - name: Severity
+      type: string

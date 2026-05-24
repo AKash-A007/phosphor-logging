@@ -1,0 +1,32 @@
+version: 1.0
+mappings:
+  - event: xyz.openbmc_project.State.Fan.FanFailed
+    afid: AFID_0x1001
+  - event: xyz.openbmc_project.State.Fan.FanRestored
+    afid: AFID_0x1002
+  - event: xyz.openbmc_project.State.Thermal.DeviceOverOperatingTemperatureFault
+    afid: AFID_0x2001
+  - event: xyz.openbmc_project.State.Thermal.DeviceOperatingNormalTemperature
+    afid: AFID_0x2002
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperWarningThreshold
+    afid: AFID_0x3001
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperCriticalThreshold
+    afid: AFID_0x3002
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperSoftShutdownThreshold
+    afid: AFID_0x3003
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperHardShutdownThreshold
+    afid: AFID_0x3004
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerWarningThreshold
+    afid: AFID_0x3005
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerCriticalThreshold
+    afid: AFID_0x3006
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerSoftShutdownThreshold
+    afid: AFID_0x3007
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerHardShutdownThreshold
+    afid: AFID_0x3008
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingCritical
+    afid: AFID_0x3009
+  - event: xyz.openbmc_project.Sensor.Threshold.ReadingNoLongerCritical
+    afid: AFID_0x300A
+  - event: xyz.openbmc_project.Sensor.Threshold.SensorReadingNormalRange
+    afid: AFID_0x300B

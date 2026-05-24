@@ -239,3 +239,12 @@ subdir('dist')
 if get_option('tests').allowed()
     subdir('test')
 endif
+ 
+# AEL (AMD Event Logging) extension
+if get_option('ael-extension').allowed()
+    subdir('extensions/ael')
+    phosphor_log_manager_sources  += ael_sources
+    phosphor_log_manager_deps     += ael_deps
+    phosphor_log_manager_deps     += [event_afid_map_hpp]
+    phosphor_log_manager_includes += [ael_include_dirs]
+endif
