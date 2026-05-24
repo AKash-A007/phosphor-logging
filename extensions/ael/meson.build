@@ -1,29 +1,14 @@
 # extensions/ael/meson.build
-#
-# AEL (AMD Event Logging) Extension Build
-#
-# Enabled via:
-#   meson setup build -Dael-extension=enabled
-#
-# In phosphor-logging root meson.build:
-#   if get_option('ael-extension').allowed()
-#       subdir('extensions/ael')
-#   endif
 
 python3_prog = find_program('python3')
-ael_pipeline = files('../../tools/ael_pipeline.py')
 
 # ── Step 1: Generate event_afid_map.hpp at build time ────────────────────────
-#
-# This validates all YAML sources and generates the C++ lookup header.
-# If validation fails (stale event, invalid AFID) the BUILD FAILS here.
-# This is the CI enforcement point at compile time.
 
 event_afid_map_hpp = custom_target(
     'ael_afid_codegen',
     command: [
         python3_prog,
-        ael_pipeline,
+        files('../../tools/ael_pipeline.py'),
         '--pdi-dir',  meson.project_source_root() / 'subprojects/phosphor-dbus-interfaces/yaml/xyz/openbmc_project',
         '--amd-dir',  meson.project_source_root() / 'yaml/com/amd',
         '--afid-map', meson.project_source_root() / 'yaml/com/amd/ael/event_afid_map.yaml',
@@ -37,8 +22,15 @@ event_afid_map_hpp = custom_target(
 )
 
 # ── Step 2: AEL sources ───────────────────────────────────────────────────────
+# entry_points.cpp  — startup + REGISTER_EXTENSION_FUNCTION (high-level entry)
+# manager.cpp       — Manager class (owns all state)
+# ael_entry.cpp     — per-entry OEM object (owns D-Bus interface)
 
-ael_sources = files('ael.cpp')
+ael_sources = files(
+    'entry_points.cpp',
+    'manager.cpp',
+    'ael_entry.cpp',
+)
 
 # ── Step 3: Dependencies ──────────────────────────────────────────────────────
 
@@ -48,21 +40,22 @@ ael_deps = [
     dependency('phosphor-dbus-interfaces'),
 ]
 
-# ── Step 4: Include dirs ──────────────────────────────────────────────────────
-# Add build dir so ael.cpp can #include "event_afid_map.hpp"
+ael_include_dirs = include_directories(
+    '.',
+)
 
-ael_include_dirs = include_directories('.')
+# ── Step 5: Tests ─────────────────────────────────────────────────────────────
 
-# ── Step 5: Expose to parent meson.build ──────────────────────────────────────
+# Note: Tests are handled by test/meson.build which calls subdir('ael')
+
+# ── Step 6: Expose to root meson.build ────────────────────────────────────────
 #
-# In phosphor-logging/meson.build, add:
+# In phosphor-logging/meson.build:
 #
 #   if get_option('ael-extension').allowed()
 #       subdir('extensions/ael')
 #       phosphor_log_manager_sources  += ael_sources
 #       phosphor_log_manager_deps     += ael_deps
-#       phosphor_log_manager_deps     += event_afid_map_hpp
-#       phosphor_log_manager_includes += ael_include_dirs
+#       phosphor_log_manager_deps     += [event_afid_map_hpp]
+#       phosphor_log_manager_includes += [ael_include_dirs]
 #   endif
-
-# ── Step 6: Tests are in test/ael/meson.build, wired from test/meson.build ───

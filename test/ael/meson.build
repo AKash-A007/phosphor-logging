@@ -11,6 +11,7 @@ test(
         dependencies: [
             conf_h_dep,
             gtest_dep,
+            gmock_dep,
             sdbusplus_dep,
             sdeventplus_dep,
             pdi_dep,
