@@ -236,6 +236,10 @@ executable(
 
 subdir('dist')
 
-if get_option('tests').allowed()
+if get_option('ael-extension').allowed()
+    subdir('extensions/ael')
+endif
+
+if get_option('openpower-pel-extension').allowed()
     subdir('test')
 endif
