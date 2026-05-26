@@ -19,6 +19,7 @@ ael_lib = static_library(
         sdbusplus_dep,
         sdeventplus_dep,
         phosphor_logging_dep,
+        nlohmann_json_dep,
         conf_h_dep,
     ],
 )
@@ -26,4 +27,10 @@ ael_lib = static_library(
 ael_dep = declare_dependency(
     link_with: ael_lib,
     include_directories: ael_include_dirs,
+)
+
+# Install AEL Registry
+install_data(
+    'ael-registry.json',
+    install_dir: get_option('datadir') / 'phosphor-logging/ael',
 )

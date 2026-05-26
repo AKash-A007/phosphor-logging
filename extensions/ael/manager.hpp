@@ -23,7 +23,7 @@ namespace phosphor::logging::extensions::ael
 class AelManager
 {
   public:
-    explicit AelManager(sdbusplus::bus_t& bus) : bus(bus), exporter(bus) {}
+    explicit AelManager(sdbusplus::bus_t& bus);
 
     AelManager(const AelManager&) = delete;
     AelManager& operator=(const AelManager&) = delete;
@@ -37,10 +37,16 @@ class AelManager
                   uint32_t id, uint64_t timestamp);
 
   private:
+    /** @brief Load AEL registry from JSON */
+    void loadRegistry();
+
     sdbusplus::bus_t& bus;
 
     /** @brief Persistent D-Bus exporter to keep interfaces alive */
     AelDbusExporter exporter;
+
+    /** @brief Mapping from OpenBMC Message ID to AFID */
+    std::map<std::string, std::string> _registry;
 };
 
 void startup(phosphor::logging::internal::Manager& manager);
