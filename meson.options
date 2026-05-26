@@ -4,7 +4,7 @@ option(
     'ael-extension',
     type: 'feature',
     description: 'Enable AMD Event Layer (AEL) logging extension',
-    value: 'disabled',
+    value: 'enabled',
 )
 
 option(

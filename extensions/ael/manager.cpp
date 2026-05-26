@@ -1,5 +1,10 @@
 #include "manager.hpp"
 
+#include "dbus_exporter.hpp"
+#include "model.hpp"
+#include "serializer.hpp"
+#include "validator.hpp"
+
 #include <phosphor-logging/lg2.hpp>
 
 namespace phosphor::logging::extensions::ael
@@ -12,12 +17,27 @@ void AelManager::onCreate(
     const phosphor::logging::AdditionalDataArg& /*additionalData*/, uint32_t id,
     uint64_t /*timestamp*/)
 {
-    auto path = std::format("/xyz/openbmc_project/logging/entry/{}", id);
+    const auto path = std::format("/xyz/openbmc_project/logging/entry/{}", id);
 
-    lg2::debug("AEL: entry created path={PATH} message={MESSAGE}", "PATH", path,
-               "MESSAGE", message);
+    lg2::debug("AEL: processing log entry path={PATH}", "PATH", path);
 
-    // Future: attach AEL metadata here (commit 2)
+    /*
+     * Temporary placeholder logic:
+     * In real implementation, plugins / rules will populate AEL metadata
+     */
+    AelSimple aelObject;
+    aelObject.afid = "0x1001";
+
+    if (!AelValidator::validate(aelObject))
+    {
+        lg2::warning("AEL: validation failed for entry {ID}", "ID", id);
+        return;
+    }
+
+    const auto serializedData = AelSerializer::toMap(aelObject);
+
+    AelDbusExporter exporter(bus);
+    exporter.attach(path, serializedData);
 }
 
 void startup(phosphor::logging::internal::Manager& manager)
