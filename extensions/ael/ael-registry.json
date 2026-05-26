@@ -1,0 +1,65 @@
+{
+    "version": "1.0",
+    "mappings": {
+        "xyz.openbmc_project.State.Fan.FanFailed": {
+            "afid": "0x1001",
+            "description": "Fan hardware failure detected"
+        },
+        "xyz.openbmc_project.State.Fan.FanRestored": {
+            "afid": "0x1002",
+            "description": "Fan restored to normal operation"
+        },
+        "xyz.openbmc_project.State.Thermal.DeviceOverOperatingTemperatureFault": {
+            "afid": "0x2001",
+            "description": "Device over operating temperature fault"
+        },
+        "xyz.openbmc_project.State.Thermal.DeviceOperatingNormalTemperature": {
+            "afid": "0x2002",
+            "description": "Device returned to normal operating temperature"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperWarningThreshold": {
+            "afid": "0x3001",
+            "description": "Sensor reading above upper warning threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperCriticalThreshold": {
+            "afid": "0x3002",
+            "description": "Sensor reading above upper critical threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperSoftShutdownThreshold": {
+            "afid": "0x3003",
+            "description": "Sensor reading above upper soft shutdown threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingAboveUpperHardShutdownThreshold": {
+            "afid": "0x3004",
+            "description": "Sensor reading above upper hard shutdown threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerWarningThreshold": {
+            "afid": "0x3005",
+            "description": "Sensor reading below lower warning threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerCriticalThreshold": {
+            "afid": "0x3006",
+            "description": "Sensor reading below lower critical threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerSoftShutdownThreshold": {
+            "afid": "0x3007",
+            "description": "Sensor reading below lower soft shutdown threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingBelowLowerHardShutdownThreshold": {
+            "afid": "0x3008",
+            "description": "Sensor reading below lower hard shutdown threshold"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingCritical": {
+            "afid": "0x3009",
+            "description": "Sensor reading critical"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.ReadingNoLongerCritical": {
+            "afid": "0x300A",
+            "description": "Sensor reading no longer critical"
+        },
+        "xyz.openbmc_project.Sensor.Threshold.SensorReadingNormalRange": {
+            "afid": "0x300B",
+            "description": "Sensor reading returned to normal range"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+description: >
+    AMD Event Layer (AEL) OEM extension interface for Log Entries.
+    This interface decorates standard log entries with structured
+    AMD-specific metadata.
+
+properties:
+    - name: OemAdditionalData
+      type: dict[string, string]
+      description: >
+          A dictionary of key-value pairs containing the AEL metadata
+          schema formatted strings (e.g., AEL.TYPE, AEL.AFID).
