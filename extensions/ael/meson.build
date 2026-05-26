@@ -34,3 +34,11 @@ install_data(
     'ael-registry.json',
     install_dir: get_option('datadir') / 'phosphor-logging/ael',
 )
+
+# Install AEL Tool
+install_data(
+    'aeltool.py',
+    rename: 'aeltool',
+    install_dir: get_option('bindir'),
+    install_mode: 'rwxr-xr-x',
+)
